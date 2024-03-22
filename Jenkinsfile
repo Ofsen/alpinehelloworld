@@ -3,9 +3,6 @@ pipeline {
        ID_DOCKER = "${ID_DOCKER_PARAMS}"
        IMAGE_NAME = "alpinehelloworld"
        IMAGE_TAG = "latest"
-          // PORT_EXPOSED = "32768"
-       STAGING = "${ID_DOCKER}-staging"
-       PRODUCTION = "${ID_DOCKER}-production"
      }
      agent none
      stages {
@@ -73,21 +70,18 @@ pipeline {
             }
       agent any
       environment {
-          HEROKU_API_KEY = credentials('heroku_api_key')
+          RENDER_STAGING_DEPLOY_HOOK = credentials('render_staging_deploy_hook')
       }  
       steps {
           script {
             sh '''
-              npm i -g heroku@7.68.0
-              heroku container:login
-              heroku create $STAGING || echo "project already exist"
-              heroku container:push -a $STAGING web
-              heroku container:release -a $STAGING web
+               echo "Staging"
+               echo $RENDER_STAGING_DEPLOY_HOOK
+               curl $RENDER_STAGING_DEPLOY_HOOK
             '''
           }
         }
      }
-
 
 
      stage('Push image in production and deploy it') {
@@ -96,16 +90,12 @@ pipeline {
             }
       agent any
       environment {
-          HEROKU_API_KEY = credentials('heroku_api_key')
+          RENDER_PRODUCTION_DEPLOY_HOOK = credentials('render_production_deploy_hook')
       }  
       steps {
           script {
             sh '''
-              npm i -g heroku@7.68.0
-              heroku container:login
-              heroku create $PRODUCTION || echo "project already exist"
-              heroku container:push -a $PRODUCTION web
-              heroku container:release -a $PRODUCTION web
+              curl $RENDER_PRODUCTION_DEPLOY_HOOK
             '''
           }
         }
